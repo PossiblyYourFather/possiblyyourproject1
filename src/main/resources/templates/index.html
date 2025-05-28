@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+        h1, h2 { color: #333; }
+        form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 400px; margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { margin-top: 15px; padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        ul { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; }
+        li { margin-bottom: 10px; }
+        #sendStatus { margin-top: 10px; }
+    </style>
+    <script>
+        async function fetchEmails() {
+            const email = document.getElementById('fetchEmail').value;
+            const password = document.getElementById('fetchPassword').value;
+
+            try {
+                const response = await fetch(`/api/emails/recent?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
+                const emails = await response.json();
+
+                const emailList = document.getElementById('email-list');
+                emailList.innerHTML = '';
+
+                emails.forEach(email => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `From: ${email.from}, Subject: ${email.subject}, Date: ${email.date}`;
+                    emailList.appendChild(listItem);
+                });
+            } catch (error) {
+                alert('Error fetching emails.');
+            }
+        }
+
+        async function sendEmail() {
+            const data = {
+                fromEmail: document.getElementById('fromEmail').value,
+                password: document.getElementById('sendPassword').value,
+                toEmail: document.getElementById('toEmail').value,
+                subject: document.getElementById('subject').value,
+                body: document.getElementById('body').value
+            };
+
+            try {
+                const response = await fetch('/api/emails/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.text();
+                document.getElementById('sendStatus').innerText = result;
+            } catch (error) {
+                document.getElementById('sendStatus').innerText = 'Error sending email.';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Email Client</h1>
+
+    <h2>Fetch Recent Emails</h2>
+    <form onsubmit="event.preventDefault(); fetchEmails();">
+        <label for="fetchEmail">Email:</label>
+        <input type="email" id="fetchEmail" required>
+        <label for="fetchPassword">Password:</label>
+        <input type="password" id="fetchPassword" required>
+        <button type="submit">Fetch Emails</button>
+    </form>
+    <ul id="email-list"></ul>
+
+    <h2>Send Email</h2>
+    <form id="sendEmailForm" onsubmit="event.preventDefault(); sendEmail();">
+        <label for="fromEmail">Your Email:</label>
+        <input type="email" id="fromEmail" required>
+        <label for="sendPassword">Your Password:</label>
+        <input type="password" id="sendPassword" required>
+        <label for="toEmail">To:</label>
+        <input type="email" id="toEmail" required>
+        <label for="subject">Subject:</label>
+        <input type="text" id="subject" required>
+        <label for="body">Message:</label>
+        <textarea id="body" required></textarea>
+        <button type="submit">Send Email</button>
+    </form>
+    <div id="sendStatus"></div>
+</body>
+</html>
